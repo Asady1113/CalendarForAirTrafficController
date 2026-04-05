@@ -58,44 +58,44 @@ Application層で実装されたユースケースを実現するためのUI（P
     - `ExportApplicationServiceProtocol`
   - 既存のApplication Serviceがプロトコルに準拠するよう更新
 
-- [ ] **Step 1.2**: SwiftData永続化層の実装
+- [x] **Step 1.2**: SwiftData永続化層の実装
   - SwiftDataモデルの定義（CrewModel, CellModel）
   - 既存のDomainエンティティとの変換ロジック
   - CrewRepository、CellRepositoryのSwiftData対応
 
-- [ ] **Step 1.3**: DIコンテナの設計・実装
+- [x] **Step 1.3**: DIコンテナの設計・実装
   - 依存性注入の仕組みを構築
   - Application ServiceとRepositoryの初期化
   - SwiftDataのModelContainerセットアップ
 
-- [ ] **Step 1.4**: アプリエントリポイント（AppApp.swift）の更新
+- [x] **Step 1.4**: アプリエントリポイント（AppApp.swift）の更新
   - SwiftData ModelContainer設定
   - DI設定
   - NavigationStack構造の設定
 
 ### Phase 2: Presentation層 - ViewModel設計・実装
 
-- [ ] **Step 2.1**: CrewListViewModel の設計・実装
+- [x] **Step 2.1**: CrewListViewModel の設計・実装
   - 対応US: US-1.1, US-1.2, US-1.3, US-1.4, US-1.5
   - クルー一覧取得、作成、編集、削除、選択
   - セル数の表示（デザイン参照）
 
-- [ ] **Step 2.2**: CellListViewModel の設計・実装
+- [x] **Step 2.2**: CellListViewModel の設計・実装
   - 対応US: US-2.1, US-2.2, US-2.3, US-2.4, US-2.5, US-2.6
   - セル一覧取得、作成、編集、削除、選択
   - 7ラウンド構成の表示（デザイン参照）
 
-- [ ] **Step 2.3**: ScheduleViewModel の設計・実装
+- [x] **Step 2.3**: ScheduleViewModel の設計・実装
   - 対応US: US-3.1, US-3.2, US-3.3, US-3.4, US-3.5
   - 月次カレンダー表示、月切り替え、当日ハイライト、勤務種別色分け
 
-- [ ] **Step 2.4**: ExportViewModel の設計・実装
+- [x] **Step 2.4**: ExportViewModel の設計・実装
   - 対応US: US-4.1, US-4.2, US-4.3, US-4.4
   - エクスポート期間設定、ICSダウンロード、Googleカレンダー連携、削除
 
 ### Phase 3: Presentation層 - View設計・実装
 
-- [ ] **Step 3.1**: クルー管理画面群の実装
+- [x] **Step 3.1**: クルー管理画面群の実装
   - CrewListView（クルー一覧）- デザイン: CrewList.png
     - ヘッダー「マイ スケジュール」
     - ウェルカムメッセージカード
@@ -107,7 +107,7 @@ Application層で実装されたユースケースを実現するためのUI（P
     - キャンセル・保存ボタン
   - 削除確認ダイアログ
 
-- [ ] **Step 3.2**: セル管理画面群の実装
+- [x] **Step 3.2**: セル管理画面群の実装
   - CellListView（セル一覧）- デザイン: CellList.png
     - ヘッダー（クルー名、戻るボタン）
     - セルカード（セル名、カレンダーボタン、編集・削除）
@@ -119,7 +119,7 @@ Application層で実装されたユースケースを実現するためのUI（P
     - 完了ボタン
   - 削除確認ダイアログ
 
-- [ ] **Step 3.3**: カレンダー表示画面の実装
+- [x] **Step 3.3**: カレンダー表示画面の実装
   - ScheduleCalendarView（月次カレンダー）- デザイン: Calendar.png
     - ヘッダー（クルー名-セル名、戻るボタン）
     - 月表示（年月、前月・翌月ボタン）
@@ -129,14 +129,14 @@ Application層で実装されたユースケースを実現するためのUI（P
     - 日曜日（赤）、土曜日（青）の日付色
   - カスタムカレンダーグリッドコンポーネント
 
-- [ ] **Step 3.4**: エクスポート画面の実装
+- [x] **Step 3.4**: エクスポート画面の実装
   - ExportView（エクスポート設定）- デザイン: Export.png
     - 「エクスポート設定」セクション
     - 開始日・終了日DatePicker
     - 「Googleカレンダーに同期」ボタン
     - 「ICSファイル(.ics)を保存」ボタン
 
-- [ ] **Step 3.5**: 共通UIコンポーネントの実装
+- [x] **Step 3.5**: 共通UIコンポーネントの実装
   - ShiftTypeColors.swift（勤務種別の色定義）
     - E1: 水色
     - A: 水色
@@ -152,19 +152,50 @@ Application層で実装されたユースケースを実現するためのUI（P
 
 ### Phase 4: Infrastructure層 - 外部連携
 
-- [ ] **Step 4.1**: ICSファイル共有機能の実装
+- [x] **Step 4.1**: ICSファイル共有機能の実装
   - UIActivityViewController連携
   - ShareSheet対応
 
-- [ ] **Step 4.2**: Google Calendar API連携の実装
-  - Google Sign-In SDK導入
-  - OAuth 2.0認証フロー
-  - Google Calendar API呼び出し
-  - CalendarExportServiceProtocolの実装
+- [x] **Step 4.2**: Google Calendar API連携の実装
+
+  **前提条件（ユーザー側の作業）**
+
+  [Question] Google Cloud ConsoleでのOAuth設定は完了していますか？
+  - プロジェクト作成
+  - Google Calendar APIの有効化
+  - OAuth 2.0クライアントID（iOSアプリ用）の作成
+  - `GoogleService-Info.plist` のダウンロード
+
+  [Answer]
+  まだです。手順詳細に教えて
+
+  [Question] アプリのBundle IDは何ですか？（Google Cloud ConsoleのOAuth設定に必要）
+
+  [Answer]
+  わからないんだけど、どうやって確認するの？
+
+  **実装ステップ**
+
+  - [x] **Step 4.2.1**: Swift Package ManagerでGoogle Sign-In SDKを導入
+    - `GoogleSignIn-iOS` を追加（完了）
+
+  - [x] **Step 4.2.2**: クライアントIDとURL Schemeの設定
+    - クライアントID: `GoogleCalendarService.swift` にハードコード
+    - URL Scheme: Xcodeプロジェクトに追加済み（`com.googleusercontent.apps.839997198140-...`）
+    - ※ `GoogleService-Info.plist` は不要（プログラム的に設定）
+
+  - [x] **Step 4.2.3**: `GoogleCalendarService` の実装
+    - `CalendarExportServiceProtocol` に準拠
+    - Google Sign-Inによる認証フロー（restorePreviousSignIn → signIn）
+    - Google Calendar REST APIでイベント登録（insertEvents）
+    - Google Calendar REST APIでイベント削除（fetchAndDeleteEvents）
+
+  - [x] **Step 4.2.4**: DIContainerに `GoogleCalendarService` を組み込む
+    - `ExportApplicationService` の `calendarExportService` に設定済み
 
 ### Phase 5: ナビゲーション・統合
 
-- [ ] **Step 5.1**: 画面遷移の実装
+- [x] **Step 5.1**: 画面遷移の実装
   - クルー一覧 → セル管理（クルー選択時）
   - セル管理 → カレンダー表示（セル選択時）
   - カレンダー表示内にエクスポートセクション
