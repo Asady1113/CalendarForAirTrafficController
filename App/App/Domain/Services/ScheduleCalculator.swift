@@ -40,8 +40,9 @@ class ScheduleCalculator {
     }
 
     private func calculateShiftType(for date: Date, cell: Cell, crew: Crew, calendar: Calendar) -> ShiftType {
-        // 1. 対象日とサイクル開始日の差分を計算
-        let daysDiff = calendar.dateComponents([.day], from: crew.cycleStartDate, to: date).day ?? 0
+        // 1. 対象日とサイクル開始日の差分を計算（時刻を除いた日付のみで比較）
+        let cycleStart = calendar.startOfDay(for: crew.cycleStartDate)
+        let daysDiff = calendar.dateComponents([.day], from: cycleStart, to: date).day ?? 0
 
         // 2. 差分を42で割った余りでサイクル内の日目を特定
         var dayInCycle = daysDiff % 42
