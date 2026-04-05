@@ -5,7 +5,7 @@ import UIKit
 /// Google Calendar APIを使った外部カレンダー連携
 final class GoogleCalendarService: CalendarExportServiceProtocol {
 
-    private let clientID = "839997198140-v11ehen7neoq9h3f74okkbf0hcnds588.apps.googleusercontent.com"
+    private let clientID = Secrets.googleClientID
     private let calendarScope = "https://www.googleapis.com/auth/calendar"
     private let calendarAPIBase = "https://www.googleapis.com/calendar/v3"
 
