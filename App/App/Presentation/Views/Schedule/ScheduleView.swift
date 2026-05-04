@@ -148,16 +148,42 @@ struct ScheduleView: View {
             // Googleカレンダー同期ボタン
             Button(action: { exportViewModel.exportToGoogleCalendar() }) {
                 HStack {
-                    Image(systemName: "g.circle.fill")
-                    Text("Googleカレンダーに同期")
+                    if exportViewModel.isLoading {
+                        ProgressView()
+                            .tint(.white)
+                        Text("エクスポート中...")
+                    } else {
+                        Image(systemName: "g.circle.fill")
+                        Text("Googleカレンダーに同期")
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(AppColors.accent)
+                .background(exportViewModel.isLoading ? Color.gray : AppColors.accent)
                 .foregroundColor(.white)
                 .cornerRadius(12)
             }
             .disabled(exportViewModel.isLoading || !exportViewModel.isValidPeriod)
+
+            // Googleカレンダーから削除ボタン
+            Button(action: { exportViewModel.deleteFromCalendar() }) {
+                HStack {
+                    if exportViewModel.isDeleting {
+                        ProgressView()
+                            .tint(.red)
+                        Text("削除中...")
+                    } else {
+                        Image(systemName: "trash")
+                        Text("Googleカレンダーから削除")
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(.systemGray5))
+                .foregroundColor(.red)
+                .cornerRadius(12)
+            }
+            .disabled(exportViewModel.isLoading || exportViewModel.isDeleting || !exportViewModel.isValidPeriod)
 
             // ICSファイル保存ボタン
             Button(action: { exportViewModel.generateAndShareIcsFile() }) {
