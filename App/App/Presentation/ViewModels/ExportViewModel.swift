@@ -15,6 +15,7 @@ final class ExportViewModel: ObservableObject {
     @Published var startDate: Date
     @Published var endDate: Date
     @Published var isLoading: Bool = false
+    @Published var isDeleting: Bool = false
     @Published var errorMessage: String?
     @Published var successMessage: String?
 
@@ -90,7 +91,7 @@ final class ExportViewModel: ObservableObject {
 
     /// カレンダーから予定を削除
     func deleteFromCalendar() {
-        isLoading = true
+        isDeleting = true
         errorMessage = nil
         successMessage = nil
 
@@ -102,7 +103,7 @@ final class ExportViewModel: ObservableObject {
 
         exportService.deleteFromCalendar(request: request) { [weak self] result in
             Task { @MainActor in
-                self?.isLoading = false
+                self?.isDeleting = false
                 switch result {
                 case .success:
                     self?.successMessage = "カレンダーからの削除が完了しました"

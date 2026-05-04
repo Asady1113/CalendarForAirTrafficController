@@ -91,36 +91,86 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
 
     // MARK: - Insert Events
 
+    private let batchSize = 5
+    private let batchInterval: TimeInterval = 0.5
+
     private func insertEvents(_ schedules: [WorkSchedule], appName: String, accessToken: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        let group = DispatchGroup()
-        var insertError: Error?
-
-        for schedule in schedules {
-            // OFFと明けは終日イベント、それ以外は時刻あり
-            let event = buildEventBody(schedule: schedule, appName: appName)
-
-            group.enter()
-            var request = URLRequest(url: URL(string: "\(calendarAPIBase)/calendars/primary/events")!)
-            request.httpMethod = "POST"
-            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try? JSONSerialization.data(withJSONObject: event)
-
-            URLSession.shared.dataTask(with: request) { _, response, error in
-                if let error = error {
-                    insertError = error
-                }
-                group.leave()
-            }.resume()
+        let filtered = schedules.filter { $0.shiftType != .off && $0.shiftType != .postNight }
+        let batches = stride(from: 0, to: filtered.count, by: batchSize).map {
+            Array(filtered[$0..<min($0 + batchSize, filtered.count)])
         }
 
-        group.notify(queue: .main) {
-            if let error = insertError {
-                completion(.failure(error))
-            } else {
-                completion(.success(()))
+        sendBatches(batches, appName: appName, accessToken: accessToken, batchIndex: 0, failedSchedules: []) { [weak self] failedSchedules in
+            guard !failedSchedules.isEmpty else {
+                DispatchQueue.main.async { completion(.success(())) }
+                return
+            }
+            // 失敗分をリトライ
+            let retryBatches = stride(from: 0, to: failedSchedules.count, by: self?.batchSize ?? 5).map {
+                Array(failedSchedules[$0..<min($0 + (self?.batchSize ?? 5), failedSchedules.count)])
+            }
+            self?.sendBatches(retryBatches, appName: appName, accessToken: accessToken, batchIndex: 0, failedSchedules: []) { stillFailed in
+                DispatchQueue.main.async {
+                    if stillFailed.isEmpty {
+                        completion(.success(()))
+                    } else {
+                        completion(.failure(GoogleCalendarError.apiError(statusCode: 403)))
+                    }
+                }
             }
         }
+    }
+
+    private func sendBatches(_ batches: [[WorkSchedule]], appName: String, accessToken: String, batchIndex: Int, failedSchedules: [WorkSchedule], completion: @escaping ([WorkSchedule]) -> Void) {
+        guard batchIndex < batches.count else {
+            completion(failedSchedules)
+            return
+        }
+
+        let batch = batches[batchIndex]
+        let group = DispatchGroup()
+        let lock = NSLock()
+        var batchFailed: [WorkSchedule] = []
+
+        for schedule in batch {
+            group.enter()
+            sendEvent(schedule: schedule, appName: appName, accessToken: accessToken) { error in
+                if error != nil {
+                    lock.lock()
+                    batchFailed.append(schedule)
+                    lock.unlock()
+                }
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .global()) { [weak self] in
+            let delay = self?.batchInterval ?? 0.5
+            DispatchQueue.global().asyncAfter(deadline: .now() + delay) {
+                self?.sendBatches(batches, appName: appName, accessToken: accessToken, batchIndex: batchIndex + 1, failedSchedules: failedSchedules + batchFailed, completion: completion)
+            }
+        }
+    }
+
+    private func sendEvent(schedule: WorkSchedule, appName: String, accessToken: String, completion: @escaping (Error?) -> Void) {
+        let event = buildEventBody(schedule: schedule, appName: appName)
+        var request = URLRequest(url: URL(string: "\(calendarAPIBase)/calendars/primary/events")!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: event)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(error)
+                return
+            }
+            if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                completion(GoogleCalendarError.apiError(statusCode: httpResponse.statusCode))
+                return
+            }
+            completion(nil)
+        }.resume()
     }
 
     private func buildEventBody(schedule: WorkSchedule, appName: String) -> [String: Any] {
@@ -128,9 +178,8 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
         let formatter = ISO8601DateFormatter()
         formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
 
-        let isAllDay = schedule.shiftType == .off || schedule.shiftType == .postNight
-
-        if isAllDay {
+        guard let start = shiftStartDate(for: schedule),
+              let end = shiftEndDate(for: schedule) else {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             dateFormatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
@@ -140,27 +189,13 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
                 "start": ["date": dateStr],
                 "end": ["date": dateStr]
             ]
-        } else {
-            guard let start = shiftStartDate(for: schedule),
-                  let end = shiftEndDate(for: schedule) else {
-                // フォールバック: 終日イベント
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateFormat = "yyyy-MM-dd"
-                dateFormatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
-                let dateStr = dateFormatter.string(from: schedule.date)
-                return [
-                    "summary": title,
-                    "start": ["date": dateStr],
-                    "end": ["date": dateStr]
-                ]
-            }
-            formatter.formatOptions = [.withInternetDateTime]
-            return [
-                "summary": title,
-                "start": ["dateTime": formatter.string(from: start), "timeZone": "Asia/Tokyo"],
-                "end": ["dateTime": formatter.string(from: end), "timeZone": "Asia/Tokyo"]
-            ]
         }
+        formatter.formatOptions = [.withInternetDateTime]
+        return [
+            "summary": title,
+            "start": ["dateTime": formatter.string(from: start), "timeZone": "Asia/Tokyo"],
+            "end": ["dateTime": formatter.string(from: end), "timeZone": "Asia/Tokyo"]
+        ]
     }
 
     private func shiftStartDate(for schedule: WorkSchedule) -> Date? {
@@ -193,20 +228,19 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
     private func fetchAndDeleteEvents(from startDate: Date, to endDate: Date, appName: String, accessToken: String, completion: @escaping (Result<Void, Error>) -> Void) {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.timeZone = TimeZone(identifier: "UTC")
 
         var components = URLComponents(string: "\(calendarAPIBase)/calendars/primary/events")!
         components.queryItems = [
             URLQueryItem(name: "timeMin", value: formatter.string(from: startDate)),
             URLQueryItem(name: "timeMax", value: formatter.string(from: endDate)),
-            URLQueryItem(name: "q", value: "\(appName)_"),
             URLQueryItem(name: "maxResults", value: "2500")
         ]
 
         var request = URLRequest(url: components.url!)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             if let error = error {
                 DispatchQueue.main.async { completion(.failure(error)) }
                 return
@@ -218,7 +252,11 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
                 return
             }
 
-            let eventIDs = items.compactMap { $0["id"] as? String }
+            let filtered = items.filter { item in
+                guard let summary = item["summary"] as? String else { return false }
+                return summary.hasPrefix("\(appName)_")
+            }
+            let eventIDs = filtered.compactMap { $0["id"] as? String }
             self?.deleteEventsByIDs(eventIDs, accessToken: accessToken, completion: completion)
         }.resume()
     }
@@ -229,26 +267,66 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
             return
         }
 
-        let group = DispatchGroup()
-        var deleteError: Error?
+        let batches = stride(from: 0, to: ids.count, by: batchSize).map {
+            Array(ids[$0..<min($0 + batchSize, ids.count)])
+        }
 
-        for id in ids {
+        deleteBatches(batches, accessToken: accessToken, batchIndex: 0, failedIDs: []) { [weak self] failedIDs in
+            guard !failedIDs.isEmpty else {
+                DispatchQueue.main.async { completion(.success(())) }
+                return
+            }
+            // 失敗分を1回リトライ
+            let retryBatches = stride(from: 0, to: failedIDs.count, by: self?.batchSize ?? 5).map {
+                Array(failedIDs[$0..<min($0 + (self?.batchSize ?? 5), failedIDs.count)])
+            }
+            self?.deleteBatches(retryBatches, accessToken: accessToken, batchIndex: 0, failedIDs: []) { stillFailed in
+                DispatchQueue.main.async {
+                    if stillFailed.isEmpty {
+                        completion(.success(()))
+                    } else {
+                        completion(.failure(GoogleCalendarError.apiError(statusCode: 403)))
+                    }
+                }
+            }
+        }
+    }
+
+    private func deleteBatches(_ batches: [[String]], accessToken: String, batchIndex: Int, failedIDs: [String], completion: @escaping ([String]) -> Void) {
+        guard batchIndex < batches.count else {
+            completion(failedIDs)
+            return
+        }
+
+        let batch = batches[batchIndex]
+        let group = DispatchGroup()
+        let lock = NSLock()
+        var batchFailed: [String] = []
+
+        for id in batch {
             group.enter()
             var request = URLRequest(url: URL(string: "\(calendarAPIBase)/calendars/primary/events/\(id)")!)
             request.httpMethod = "DELETE"
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
 
-            URLSession.shared.dataTask(with: request) { _, _, error in
-                if let error = error { deleteError = error }
+            URLSession.shared.dataTask(with: request) { _, response, error in
+                if error != nil {
+                    lock.lock()
+                    batchFailed.append(id)
+                    lock.unlock()
+                } else if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+                    lock.lock()
+                    batchFailed.append(id)
+                    lock.unlock()
+                }
                 group.leave()
             }.resume()
         }
 
-        group.notify(queue: .main) {
-            if let error = deleteError {
-                completion(.failure(error))
-            } else {
-                completion(.success(()))
+        group.notify(queue: .global()) { [weak self] in
+            let delay = self?.batchInterval ?? 0.5
+            DispatchQueue.global().asyncAfter(deadline: .now() + delay) {
+                self?.deleteBatches(batches, accessToken: accessToken, batchIndex: batchIndex + 1, failedIDs: failedIDs + batchFailed, completion: completion)
             }
         }
     }
@@ -259,11 +337,13 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
 enum GoogleCalendarError: LocalizedError {
     case authenticationFailed
     case noRootViewController
+    case apiError(statusCode: Int)
 
     var errorDescription: String? {
         switch self {
         case .authenticationFailed: return "Google認証に失敗しました"
         case .noRootViewController: return "画面の取得に失敗しました"
+        case .apiError(let statusCode): return "Google Calendar APIエラー (HTTP \(statusCode))"
         }
     }
 }
