@@ -8,17 +8,14 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject private var diContainer: DIContainer
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        CrewListView(diContainer: diContainer)
     }
 }
 
 #Preview {
-    ContentView()
+    // プレビュー用のモックは省略
+    Text("Preview requires DIContainer")
 }

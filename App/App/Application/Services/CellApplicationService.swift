@@ -17,10 +17,6 @@ class CellApplicationService: CellApplicationServiceProtocol {
     func createCell(request: CreateCellRequest) throws -> CellResponse {
         let cycleConfiguration = CycleConfiguration(rounds: request.rounds)
 
-        guard cycleConfiguration.isValid else {
-            throw CellApplicationServiceError.invalidCycleConfiguration
-        }
-
         let cell = Cell(
             id: UUID(),
             name: request.name,
@@ -37,10 +33,6 @@ class CellApplicationService: CellApplicationServiceProtocol {
         }
 
         let cycleConfiguration = CycleConfiguration(rounds: request.rounds)
-
-        guard cycleConfiguration.isValid else {
-            throw CellApplicationServiceError.invalidCycleConfiguration
-        }
 
         let updatedCell = Cell(
             id: existingCell.id,

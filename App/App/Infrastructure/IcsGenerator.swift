@@ -24,7 +24,8 @@ class IcsGenerator: IcsGeneratorProtocol {
 
         """
 
-        for schedule in schedules {
+        let filtered = schedules.filter { $0.shiftType != .off && $0.shiftType != .postNight }
+        for schedule in filtered {
             let event = createEvent(for: schedule, appName: appName)
             icsContent += event
         }
