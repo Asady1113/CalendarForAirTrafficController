@@ -7,7 +7,7 @@ class ExportApplicationService: ExportApplicationServiceProtocol {
     private let icsGenerator: IcsGeneratorProtocol
     private let calendarExportService: CalendarExportServiceProtocol?
 
-    private let appName = "TODO"
+    private let appName = "AeroRota"
 
     init(
         cellRepository: CellRepositoryProtocol,

@@ -65,6 +65,7 @@ iOSInjectionProject/
 *.p12
 *.mobileprovision
 Secrets/
+Secrets.swift
 GoogleService-Info.plist
 
 # Claude Code

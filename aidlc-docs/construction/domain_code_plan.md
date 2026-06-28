@@ -80,7 +80,7 @@
 
 - [x] **Step 3**: CycleConfiguration（サイクル構成）の実装
   - rounds: [RoundType] (7要素)
-  - isValid プロパティ（computed property）
+  - isValid プロパティ（computed property）※アプリ側では使用しない（設定者責任）
 
 - [x] **Step 4**: WorkSchedule（勤務予定）の実装
   - date: Date, shiftType: ShiftType
