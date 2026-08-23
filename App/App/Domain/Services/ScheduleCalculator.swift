@@ -2,8 +2,7 @@ import Foundation
 
 class ScheduleCalculator {
     func calculateForMonth(cell: Cell, crew: Crew, year: Int, month: Int) -> [WorkSchedule] {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let calendar = Calendar.jst
 
         guard let startOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1)),
               let range = calendar.range(of: .day, in: .month, for: startOfMonth) else {
@@ -21,8 +20,7 @@ class ScheduleCalculator {
     }
 
     func calculateForPeriod(cell: Cell, crew: Crew, period: ExportPeriod) -> [WorkSchedule] {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let calendar = Calendar.jst
 
         var schedules: [WorkSchedule] = []
         var currentDate = period.startDate
@@ -55,9 +53,11 @@ class ScheduleCalculator {
         let dayInRound = dayInCycle % 6
 
         // 4. CycleConfigurationから該当ラウンドの種別を取得
+        guard cell.cycleConfiguration.rounds.indices.contains(roundIndex) else { return .off }
         let roundType = cell.cycleConfiguration.rounds[roundIndex]
 
         // 5. RoundTypeから該当日の勤務種別を取得
+        guard roundType.shiftPattern.indices.contains(dayInRound) else { return .off }
         return roundType.shiftPattern[dayInRound]
     }
 }

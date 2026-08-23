@@ -20,7 +20,7 @@ final class ScheduleViewModel: ObservableObject {
     @Published var errorMessage: String?
 
     // MARK: - Calendar Helper
-    private let calendar = Calendar(identifier: .gregorian)
+    private let calendar = Calendar.jst
 
     // MARK: - Initialization
     init(crew: CrewResponse, cell: CellResponse, scheduleService: ScheduleApplicationServiceProtocol) {

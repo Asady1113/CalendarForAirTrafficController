@@ -60,8 +60,8 @@ enum ShiftType: String {
         case .e2:
             return DateComponents(hour: 22, minute: 15)
         case .c:
-            // 翌日08:15（夜勤は日をまたぐ）
-            return DateComponents(day: 1, hour: 8, minute: 15)
+            // 08:15（時刻のみ。日をまたぐ勤務は呼び出し側で日付を進める）
+            return DateComponents(hour: 8, minute: 15)
         case .postNight:
             return nil
         case .off:

@@ -176,13 +176,13 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
     private func buildEventBody(schedule: WorkSchedule, appName: String) -> [String: Any] {
         let title = "\(appName)_\(schedule.shiftType.japaneseName)"
         let formatter = ISO8601DateFormatter()
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.timeZone = TimeZone.jst
 
         guard let start = shiftStartDate(for: schedule),
               let end = shiftEndDate(for: schedule) else {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
-            dateFormatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+            dateFormatter.timeZone = TimeZone.jst
             let dateStr = dateFormatter.string(from: schedule.date)
             return [
                 "summary": title,
@@ -200,8 +200,7 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
 
     private func shiftStartDate(for schedule: WorkSchedule) -> Date? {
         guard let startTime = schedule.shiftType.startTime else { return nil }
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let calendar = Calendar.jst
         var components = calendar.dateComponents([.year, .month, .day], from: schedule.date)
         components.hour = startTime.hour
         components.minute = startTime.minute
@@ -210,8 +209,7 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
 
     private func shiftEndDate(for schedule: WorkSchedule) -> Date? {
         guard let endTime = schedule.shiftType.endTime else { return nil }
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let calendar = Calendar.jst
         var components = calendar.dateComponents([.year, .month, .day], from: schedule.date)
         components.hour = endTime.hour
         components.minute = endTime.minute
