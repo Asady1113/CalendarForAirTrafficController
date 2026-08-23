@@ -29,7 +29,7 @@ final class ScheduleViewModel: ObservableObject {
         self.scheduleService = scheduleService
 
         let now = Date()
-        let components = Calendar.current.dateComponents([.year, .month], from: now)
+        let components = Calendar.jst.dateComponents([.year, .month], from: now)
         self.currentYear = components.year ?? 2026
         self.currentMonth = components.month ?? 1
     }
@@ -161,6 +161,7 @@ struct CalendarDay: Identifiable {
 
     var dayNumber: Int? {
         guard let date = date else { return nil }
-        return Calendar.current.component(.day, from: date)
+        // JST基準で生成された日付なので、読み出しもJSTで行う（端末TZだと1日ずれる）
+        return Calendar.jst.component(.day, from: date)
     }
 }

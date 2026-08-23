@@ -86,3 +86,24 @@ final class SpyCalendarExportService: CalendarExportServiceProtocol {
         completion(resultToReturn)
     }
 }
+
+/// テスト用スタブ: あらかじめ与えた勤務予定をそのまま返す
+final class StubScheduleApplicationService: ScheduleApplicationServiceProtocol {
+    var schedulesToReturn: [WorkSchedule] = []
+    var errorToThrow: Error?
+
+    init(schedulesToReturn: [WorkSchedule] = []) {
+        self.schedulesToReturn = schedulesToReturn
+    }
+
+    func getMonthlySchedule(request: GetMonthlyScheduleRequest) throws -> MonthlyScheduleResponse {
+        if let errorToThrow {
+            throw errorToThrow
+        }
+        return MonthlyScheduleResponse(
+            year: request.year,
+            month: request.month,
+            schedules: schedulesToReturn
+        )
+    }
+}
