@@ -33,8 +33,7 @@ final class DIContainer: ObservableObject {
         )
 
         self.cellService = CellApplicationService(
-            cellRepository: cellRepo,
-            crewRepository: crewRepo
+            cellRepository: cellRepo
         )
 
         self.scheduleService = ScheduleApplicationService(

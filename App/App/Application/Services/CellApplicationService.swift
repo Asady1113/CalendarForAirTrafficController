@@ -2,11 +2,9 @@ import Foundation
 
 class CellApplicationService: CellApplicationServiceProtocol {
     private let cellRepository: CellRepositoryProtocol
-    private let crewRepository: CrewRepositoryProtocol
 
-    init(cellRepository: CellRepositoryProtocol, crewRepository: CrewRepositoryProtocol) {
+    init(cellRepository: CellRepositoryProtocol) {
         self.cellRepository = cellRepository
-        self.crewRepository = crewRepository
     }
 
     func listCellsByCrewId(crewId: UUID) -> [CellResponse] {
