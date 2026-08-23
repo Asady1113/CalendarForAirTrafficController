@@ -35,8 +35,8 @@ final class GoogleCalendarService: CalendarExportServiceProtocol {
 
     func deleteAllEvents(appName: String, completion: @escaping (Result<Void, Error>) -> Void) {
         // 過去5年〜未来5年を対象に削除
-        let past = Calendar.current.date(byAdding: .year, value: -5, to: Date()) ?? Date()
-        let future = Calendar.current.date(byAdding: .year, value: 5, to: Date()) ?? Date()
+        let past = Calendar.jst.date(byAdding: .year, value: -5, to: Date()) ?? Date()
+        let future = Calendar.jst.date(byAdding: .year, value: 5, to: Date()) ?? Date()
         deleteEvents(from: past, to: future, appName: appName, completion: completion)
     }
 
