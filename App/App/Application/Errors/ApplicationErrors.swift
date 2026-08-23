@@ -1,21 +1,15 @@
 import Foundation
 
-enum CrewApplicationServiceError: Error {
-    case crewNotFound
+enum CellApplicationServiceError: Error, Equatable {
+    case cellNotFound
 }
 
-enum CellApplicationServiceError: Error {
-    case invalidCycleConfiguration
+enum ScheduleApplicationServiceError: Error, Equatable {
     case cellNotFound
     case crewNotFound
 }
 
-enum ScheduleApplicationServiceError: Error {
-    case cellNotFound
-    case crewNotFound
-}
-
-enum ExportApplicationServiceError: Error {
+enum ExportApplicationServiceError: Error, Equatable {
     case cellNotFound
     case crewNotFound
     case invalidPeriod
