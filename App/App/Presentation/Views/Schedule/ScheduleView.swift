@@ -165,8 +165,16 @@ struct ScheduleView: View {
             }
             .disabled(exportViewModel.isLoading || !exportViewModel.isValidPeriod)
 
+            // 全期間一括削除トグル
+            VStack(alignment: .leading, spacing: 4) {
+                Toggle("全期間の予定を一括削除", isOn: $exportViewModel.isDeletingAllPeriod)
+                Text("アプリが作成した予定（AeroRota_ で始まる予定）のみが対象です")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
             // Googleカレンダーから削除ボタン
-            Button(action: { exportViewModel.deleteFromCalendar() }) {
+            Button(action: { exportViewModel.requestDelete() }) {
                 HStack {
                     if exportViewModel.isDeleting {
                         ProgressView()
@@ -174,7 +182,7 @@ struct ScheduleView: View {
                         Text("削除中...")
                     } else {
                         Image(systemName: "trash")
-                        Text("Googleカレンダーから削除")
+                        Text(exportViewModel.isDeletingAllPeriod ? "Googleカレンダーから全期間削除" : "Googleカレンダーから削除")
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -183,7 +191,17 @@ struct ScheduleView: View {
                 .foregroundColor(.red)
                 .cornerRadius(12)
             }
-            .disabled(exportViewModel.isLoading || exportViewModel.isDeleting || !exportViewModel.isValidPeriod)
+            .disabled(exportViewModel.isLoading || exportViewModel.isDeleting || (!exportViewModel.isDeletingAllPeriod && !exportViewModel.isValidPeriod))
+            .alert("予定を削除しますか？", isPresented: $exportViewModel.isShowingDeleteConfirmation) {
+                Button("キャンセル", role: .cancel) {}
+                Button("削除", role: .destructive) {
+                    exportViewModel.deleteFromCalendar()
+                }
+            } message: {
+                Text(exportViewModel.isDeletingAllPeriod
+                     ? "Googleカレンダーから全期間の予定（AeroRota_ で始まる予定）を削除します。この操作は取り消せません。"
+                     : "指定した期間のGoogleカレンダーの予定を削除します。この操作は取り消せません。")
+            }
 
             // ICSファイル保存ボタン
             Button(action: { exportViewModel.generateAndShareIcsFile() }) {
