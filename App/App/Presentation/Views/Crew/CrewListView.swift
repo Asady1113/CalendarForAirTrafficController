@@ -75,20 +75,39 @@ struct CrewListView: View {
 
     private var welcomeCard: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("ようこそ、管制官のみなさま。")
+            Text("AeroRota の使い方")
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .foregroundColor(AppColors.accent)
 
-            Text("勤務予定を管理するクルーを選択してください。クルーを選択すると、所属するセル（班）の構成設定やカレンダー表示ができます。")
-                .font(.caption)
-                .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 6) {
+                usageStep(1, "クルーを登録します（クルー名とサイクル開始日）。")
+                usageStep(2, "クルーを選び、セル（班）ごとに7ラウンドのサイクル構成を設定します。")
+                usageStep(3, "カレンダーで勤務予定を確認し、Googleカレンダーやicsファイルに出力します。")
+            }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .padding(.horizontal)
+    }
+
+    /// 使い方カードの手順1行分
+    private func usageStep(_ number: Int, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text("\(number)")
+                .font(.caption2)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+                .frame(width: 16, height: 16)
+                .background(Circle().fill(AppColors.accent))
+
+            Text(text)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     private var emptyStateView: some View {
