@@ -167,8 +167,7 @@ struct CellCardView: View {
 
             // ラウンド表示
             HStack(spacing: 4) {
-                ForEach(0..<7, id: \.self) { index in
-                    let round = cell.rounds[index]
+                ForEach(Array(cell.rounds.enumerated()), id: \.offset) { index, round in
                     VStack(spacing: 2) {
                         Text("R\(index + 1)")
                             .font(.caption2)

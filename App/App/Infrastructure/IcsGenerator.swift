@@ -5,13 +5,11 @@ class IcsGenerator: IcsGeneratorProtocol {
     private let dateFormatter: ISO8601DateFormatter
 
     init() {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
-        self.calendar = calendar
+        self.calendar = Calendar.jst
 
         self.dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withYear, .withMonth, .withDay, .withTime, .withTimeZone]
-        dateFormatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        dateFormatter.timeZone = TimeZone.jst
     }
 
     func generate(schedules: [WorkSchedule], appName: String) -> Data {
@@ -45,29 +43,16 @@ class IcsGenerator: IcsGeneratorProtocol {
         let startDateString = formatDateForIcs(startDate)
         let endDateString = formatDateForIcs(endDate)
 
-        if shiftType == .off || shiftType == .postNight {
-            // 終日イベント
-            let dateString = formatDateOnlyForIcs(schedule.date)
-            return """
-            BEGIN:VEVENT
-            UID:\(uid)
-            DTSTART;VALUE=DATE:\(dateString)
-            DTEND;VALUE=DATE:\(dateString)
-            SUMMARY:\(title)
-            END:VEVENT
+        // 休み・明けは generate() の filter で除外済みのため、ここには終日イベント対象は来ない
+        return """
+        BEGIN:VEVENT
+        UID:\(uid)
+        DTSTART:\(startDateString)
+        DTEND:\(endDateString)
+        SUMMARY:\(title)
+        END:VEVENT
 
-            """
-        } else {
-            return """
-            BEGIN:VEVENT
-            UID:\(uid)
-            DTSTART:\(startDateString)
-            DTEND:\(endDateString)
-            SUMMARY:\(title)
-            END:VEVENT
-
-            """
-        }
+        """
     }
 
     private func calculateEventDates(for schedule: WorkSchedule) -> (start: Date, end: Date) {
@@ -102,14 +87,7 @@ class IcsGenerator: IcsGeneratorProtocol {
     private func formatDateForIcs(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyyMMdd'T'HHmmss"
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
-        return formatter.string(from: date)
-    }
-
-    private func formatDateOnlyForIcs(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
-        formatter.timeZone = TimeZone(identifier: "Asia/Tokyo")
+        formatter.timeZone = TimeZone.jst
         return formatter.string(from: date)
     }
 }
