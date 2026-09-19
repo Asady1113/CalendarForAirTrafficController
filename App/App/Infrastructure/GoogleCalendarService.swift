@@ -6,7 +6,7 @@ import UIKit
 final class GoogleCalendarService: CalendarExportServiceProtocol {
 
     private let clientID = Secrets.googleClientID
-    private let calendarScope = "https://www.googleapis.com/auth/calendar"
+    private let calendarScope = "https://www.googleapis.com/auth/calendar.events"
     private let calendarAPIBase = "https://www.googleapis.com/calendar/v3"
 
     // MARK: - CalendarExportServiceProtocol
