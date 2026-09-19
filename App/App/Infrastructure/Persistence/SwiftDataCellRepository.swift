@@ -62,20 +62,6 @@ final class SwiftDataCellRepository: CellRepositoryProtocol {
         }
     }
 
-    func findAll() -> [Cell] {
-        let descriptor = FetchDescriptor<CellModel>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-
-        do {
-            let models = try modelContext.fetch(descriptor)
-            return models.map { $0.toDomain() }
-        } catch {
-            print("Failed to find all cells: \(error)")
-            return []
-        }
-    }
-
     func delete(_ id: UUID) {
         let descriptor = FetchDescriptor<CellModel>(
             predicate: #Predicate { $0.id == id }

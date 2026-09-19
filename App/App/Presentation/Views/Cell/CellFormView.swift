@@ -53,7 +53,7 @@ struct CellFormView: View {
                             .font(.subheadline)
                             .foregroundColor(AppColors.accent)
 
-                        ForEach(0..<7, id: \.self) { index in
+                        ForEach(0..<viewModel.formRounds.count, id: \.self) { index in
                             RoundPickerRow(
                                 roundNumber: index + 1,
                                 selectedType: $viewModel.formRounds[index]

@@ -78,9 +78,6 @@ struct AppColors {
     /// 土曜日の色
     static let saturday = Color.blue
 
-    /// 今日のハイライト色
-    static let todayHighlight = Color.blue.opacity(0.3)
-
     /// カード背景色
     static let cardBackground = Color.white
 

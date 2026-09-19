@@ -29,7 +29,7 @@ final class CellModel {
 
     /// SwiftDataモデルからDomainエンティティに変換
     func toDomain() -> Cell {
-        let rounds = roundTypes.compactMap { RoundType(rawValue: $0) }
+        let rounds = roundTypes.map { RoundType(rawValue: $0) ?? .withNight }
         let cycleConfiguration = CycleConfiguration(rounds: rounds)
         return Cell(
             id: id,
